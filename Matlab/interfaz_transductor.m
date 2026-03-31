@@ -215,9 +215,9 @@ ui.ax.MinorGridAlpha = 0.12;
 ui.hline = plot(ui.ax, NaN, NaN, 'Color', PLOT_COLORS{1}, 'LineWidth', 1.3);
 
 % =========================================================================
-% ── Panel 5: Estadísticas de señal ──────────────────  centro-derecha-top
+% ── Panel 5: Estadísticas de señal ──────────────────  abajo-centro
 % =========================================================================
-pp = mkpanel(fig, ' Estadísticas', [0.713 0.500 0.282 0.270]);
+pp = mkpanel(fig, ' Estadísticas', [0.278 0.010 0.248 0.208]);
 
 
 stat_names = {'Máx (V):', 'Mín (V):', 'Media (V):', 'RMS (V):', 'Duración (ms):'};
@@ -240,26 +240,26 @@ end
 % =========================================================================
 % ── Panel 6: Zoom ────────────────────────────────────  abajo-izquierda
 % =========================================================================
-pp = mkpanel(fig, ' Zoom', [0.005 0.010 0.52 0.208]);
+pp = mkpanel(fig, ' Zoom', [0.005 0.010 0.265 0.208]);
 
-mktext(pp, 'Tiempo (ms):', [0.01 0.64 0.09 0.22]);
-mktext(pp, 'Desde:',       [0.11 0.64 0.05 0.22]);
-ui.edit_t0 = mkedit(pp, '', [0.17 0.64 0.10 0.22]);
-mktext(pp, 'Hasta:',       [0.28 0.64 0.05 0.22]);
-ui.edit_t1 = mkedit(pp, '', [0.34 0.64 0.10 0.22]);
+mktext(pp, 'T (ms):',     [0.01 0.64 0.24 0.22]);
+mktext(pp, 'D:',           [0.26 0.64 0.07 0.22]);
+ui.edit_t0 = mkedit(pp, '', [0.34 0.64 0.18 0.22]);
+mktext(pp, 'H:',           [0.53 0.64 0.07 0.22]);
+ui.edit_t1 = mkedit(pp, '', [0.61 0.64 0.18 0.22]);
 
-mktext(pp, 'Amplitud (V):', [0.01 0.34 0.09 0.22]);
-mktext(pp, 'Desde:',        [0.11 0.34 0.05 0.22]);
-ui.edit_v0 = mkedit(pp, '', [0.17 0.34 0.10 0.22]);
-mktext(pp, 'Hasta:',        [0.28 0.34 0.05 0.22]);
-ui.edit_v1 = mkedit(pp, '', [0.34 0.34 0.10 0.22]);
+mktext(pp, 'V (V):',      [0.01 0.34 0.24 0.22]);
+mktext(pp, 'D:',           [0.26 0.34 0.07 0.22]);
+ui.edit_v0 = mkedit(pp, '', [0.34 0.34 0.18 0.22]);
+mktext(pp, 'H:',           [0.53 0.34 0.07 0.22]);
+ui.edit_v1 = mkedit(pp, '', [0.61 0.34 0.18 0.22]);
 
-mkbtn(pp, 'Aplicar', [0.78 0.56 0.18 0.24], C_BLU,     @onZoomApply, 8);
-mkbtn(pp, 'Reset',   [0.78 0.22 0.18 0.24], C_BG(1,:), @onZoomReset, 8);
+mkbtn(pp, 'Aplicar', [0.06 0.03 0.40 0.24], C_BLU,     @onZoomApply, 8);
+mkbtn(pp, 'Reset',   [0.54 0.03 0.40 0.24], C_BG(1,:), @onZoomReset, 8);
 % =========================================================================
 % ── Panel 7: Registros guardados ────────────────────  derecha-arriba
 % =========================================================================
-pp = mkpanel(fig, ' Registros guardados', [0.713 0.010 0.282 0.512]);
+pp = mkpanel(fig, ' Registros guardados', [0.713 0.010 0.282 0.760]);
 
 ui.list_rec = uicontrol(pp, 'Style', 'listbox', ...
     'Units', 'normalized', 'Position', [0.02 0.02 0.96 0.96], ...
