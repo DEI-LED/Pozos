@@ -73,6 +73,7 @@ fig = figure( ...
 % Anclar la carpeta de datos al directorio donde vive este script
 script_dir     = fileparts(mfilename('fullpath'));
 def_matfolder  = fullfile(script_dir, 'datos_pozos');
+config_file    = fullfile(script_dir, 'config_interfaz.mat');
 if ~isfolder(def_matfolder); mkdir(def_matfolder); end
 
 app.LONGITUD   = LONGITUD;
@@ -99,8 +100,8 @@ app.loaded_signals = {};          % {struct(signal,time,color,label)} señales e
 % =========================================================================
 pp = mkpanel(fig, ' Conexión Serial', [0.005 0.775 0.235 0.215]);
 
-mktext(pp, 'Puerto:',    [0.04 0.72 0.30 0.18]);
-mktext(pp, 'Baud rate:', [0.04 0.46 0.38 0.18]);
+mktext(pp, 'Puerto:',    [0.04 0.72 0.28 0.18]);
+mktext(pp, 'Baud rate:', [0.04 0.46 0.28 0.18]);
 
 avail_ports = cellstr(serialportlist('available'));
 if isempty(avail_ports)
@@ -110,11 +111,11 @@ else
 end
 ui.pop_port = uicontrol(pp, 'Style', 'popupmenu', ...
     'String', port_labels, 'Value', 1, ...
-    'Units', 'normalized', 'Position', [0.35 0.72 0.47 0.18]);
+    'Units', 'normalized', 'Position', [0.33 0.72 0.49 0.18]);
 ui.btn_refresh_port = mkbtn(pp, char(8635), [0.84 0.72 0.13 0.18], C_BG(1,:), @onRefreshPorts);
 ui.pop_baud  = uicontrol(pp, 'Style', 'popupmenu', ...
     'String', BAUD_STRS, 'Value', DEF_BAUD_IDX, ...
-    'Units', 'normalized', 'Position', [0.43 0.46 0.54 0.18]);
+    'Units', 'normalized', 'Position', [0.33 0.46 0.64 0.18]);
 
 ui.btn_connect = mkbtn(pp, 'CONECTAR', [0.06 0.20 0.88 0.21], C_GRN, @onConnectBtn);
 
@@ -149,15 +150,15 @@ ui.lbl_stickup_val = uicontrol(pp, 'Style', 'text', 'String', '—', ...
     'BackgroundColor', [0.95 0.95 0.95]);
 mktext(pp, 'm', [0.87 0.41 0.04 0.18]);
 
-% ── Fila 3: Frec. muestreo, Archivo .mat ────────────────────────────────
+% ── Fila 3: Frec. muestreo, Puntos, Carpeta ────────────────────────────
 mktext(pp, 'Frec. (Hz):', [0.02 0.15 0.14 0.18]);
-ui.edit_fs = mkedit(pp, '10000', [0.17 0.16 0.11 0.19]);
+ui.edit_fs = mkedit(pp, '10000', [0.17 0.16 0.12 0.19]);
 
-mktext(pp, 'Puntos:', [0.30 0.15 0.09 0.18]);
+mktext(pp, 'Puntos:',     [0.31 0.15 0.09 0.18]);
 ui.edit_longitud = mkedit(pp, num2str(LONGITUD), [0.40 0.16 0.09 0.19]);
 
-mktext(pp, 'Carpeta:', [0.51 0.15 0.09 0.18]);
-ui.edit_matfile = mkedit(pp, def_matfolder, [0.61 0.16 0.26 0.19]);
+mktext(pp, 'Carpeta:',    [0.51 0.15 0.10 0.18]);
+ui.edit_matfile = mkedit(pp, def_matfolder, [0.62 0.16 0.25 0.19]);
 mkbtn(pp, '...', [0.88 0.16 0.10 0.19], C_BG(1,:), @onBrowse);
 
 % Info
@@ -258,7 +259,7 @@ mkbtn(pp, 'Reset',   [0.78 0.22 0.18 0.24], C_BG(1,:), @onZoomReset, 8);
 % =========================================================================
 % ── Panel 7: Registros guardados ────────────────────  derecha-arriba
 % =========================================================================
-pp = mkpanel(fig, ' Registros en .mat', [0.713 0.010 0.282 0.512]);
+pp = mkpanel(fig, ' Registros guardados', [0.713 0.010 0.282 0.512]);
 
 ui.list_rec = uicontrol(pp, 'Style', 'listbox', ...
     'Units', 'normalized', 'Position', [0.02 0.02 0.96 0.96], ...
@@ -278,6 +279,10 @@ mkbtn(pp, 'BORRAR',               [0.06 0.08 0.88 0.22], C_RED,     @onDeleteRec
 % =========================================================================
 app.ui = ui;
 guidata(fig, app);
+
+% ── Restaurar configuración de sesión anterior ──────────────────────────
+loadConfig();
+
 refreshPilotesList();
 refreshRecordsList();
 
@@ -822,6 +827,7 @@ refreshRecordsList();
 % ── Cierre de figura ─────────────────────────────────────────────────────
     function onClose(~, ~)
         app = guidata(fig);
+        saveConfig();
         try
             if ~isempty(app.serial_obj) && isvalid(app.serial_obj)
                 configureCallback(app.serial_obj, 'off');
@@ -830,6 +836,80 @@ refreshRecordsList();
         catch
         end
         delete(fig);
+    end
+
+% ── Guardar / Restaurar configuración de sesión ─────────────────────────
+    function saveConfig()
+        app = guidata(fig);
+        try
+            cfg.mat_folder   = strtrim(get(app.ui.edit_matfile, 'String'));
+            cfg.baud_idx     = get(app.ui.pop_baud, 'Value');
+            cfg.port_idx     = get(app.ui.pop_port, 'Value');
+            cfg.fs           = strtrim(get(app.ui.edit_fs, 'String'));
+            cfg.longitud     = strtrim(get(app.ui.edit_longitud, 'String'));
+            cfg.profundidad  = strtrim(get(app.ui.edit_prof, 'String'));
+            cfg.pilote_idx   = get(app.ui.pop_pilote, 'Value');
+            cfg.fig_position = get(fig, 'Position');
+            cfg.zoom_t0      = strtrim(get(app.ui.edit_t0, 'String'));
+            cfg.zoom_t1      = strtrim(get(app.ui.edit_t1, 'String'));
+            cfg.zoom_v0      = strtrim(get(app.ui.edit_v0, 'String'));
+            cfg.zoom_v1      = strtrim(get(app.ui.edit_v1, 'String'));
+            save(config_file, 'cfg'); %#ok<NASGU>
+        catch
+        end
+    end
+
+    function loadConfig()
+        if exist(config_file, 'file') ~= 2; return; end
+        try
+            tmp = load(config_file, 'cfg');
+            cfg = tmp.cfg;
+        catch
+            return;
+        end
+        app = guidata(fig);
+        try
+            if isfield(cfg, 'mat_folder') && ~isempty(cfg.mat_folder)
+                set(app.ui.edit_matfile, 'String', cfg.mat_folder);
+                app.mat_folder = cfg.mat_folder;
+            end
+            if isfield(cfg, 'baud_idx')
+                nopt = length(get(app.ui.pop_baud, 'String'));
+                if cfg.baud_idx >= 1 && cfg.baud_idx <= nopt
+                    set(app.ui.pop_baud, 'Value', cfg.baud_idx);
+                end
+            end
+            if isfield(cfg, 'port_idx')
+                nopt = length(get(app.ui.pop_port, 'String'));
+                if cfg.port_idx >= 1 && cfg.port_idx <= nopt
+                    set(app.ui.pop_port, 'Value', cfg.port_idx);
+                end
+            end
+            if isfield(cfg, 'fs') && ~isempty(cfg.fs)
+                set(app.ui.edit_fs, 'String', cfg.fs);
+            end
+            if isfield(cfg, 'longitud') && ~isempty(cfg.longitud)
+                set(app.ui.edit_longitud, 'String', cfg.longitud);
+            end
+            if isfield(cfg, 'profundidad') && ~isempty(cfg.profundidad)
+                set(app.ui.edit_prof, 'String', cfg.profundidad);
+            end
+            if isfield(cfg, 'pilote_idx')
+                nopt = length(get(app.ui.pop_pilote, 'String'));
+                if cfg.pilote_idx >= 1 && cfg.pilote_idx <= nopt
+                    set(app.ui.pop_pilote, 'Value', cfg.pilote_idx);
+                end
+            end
+            if isfield(cfg, 'fig_position') && length(cfg.fig_position) == 4
+                set(fig, 'Position', cfg.fig_position);
+            end
+            if isfield(cfg, 'zoom_t0'); set(app.ui.edit_t0, 'String', cfg.zoom_t0); end
+            if isfield(cfg, 'zoom_t1'); set(app.ui.edit_t1, 'String', cfg.zoom_t1); end
+            if isfield(cfg, 'zoom_v0'); set(app.ui.edit_v0, 'String', cfg.zoom_v0); end
+            if isfield(cfg, 'zoom_v1'); set(app.ui.edit_v1, 'String', cfg.zoom_v1); end
+            guidata(fig, app);
+        catch
+        end
     end
 
 % #########################################################################
