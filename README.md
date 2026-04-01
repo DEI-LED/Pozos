@@ -17,4 +17,4 @@ Pozos/
 ## Componentes del sistema
 
 - **PSoC CY8CKIT-059**: Plataforma embebida con ADC, amplificadores de transimpedancia y comunicación UART
-- **MATLAB R2019b+**: Interfaz gráfica para adquisición en tiempo real y análisis de señales
+- **MATLAB R2025b+**: Interfaz gráfica para adquisición en tiempo real y análisis de señales
